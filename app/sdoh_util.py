@@ -104,8 +104,25 @@ def download_data(name=""):
             load_sdoh_data("data/places_2022.csv", index_col="TRACTFIPS", source="places", version="2022", granularity="tract")
         elif name == "ahrq":
             URL = "https://www.ahrq.gov/downloads/sdoh/sdoh_2020_tract_1_0.xlsx"
+            tmp_dir = "tmp"
+            os.makedirs(tmp_dir, exist_ok=True)
+            output_file = os.path.join(tmp_dir, "data.xlsx")
 
-            fn, _ = urllib.request.urlretrieve(URL, "tmp/data.xlsx")
+            #Need to create fake header as AHRQ is stopping automated requests
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36' }
+            req = urllib.request.Request(URL, headers=headers)
+
+            try:
+                with urllib.request.urlopen(req) as response:
+                    with open(output_file, 'wb') as out_file:
+                        out_file.write(response.read())
+                print(f"File successfully downloaded to {output_file}")
+            except urllib.error.HTTPError as e:
+                print(f"HTTP Error: {e.code} - {e.reason}")
+            except Exception as e:
+                print(f"An error occured: {e}")
+
+            # fn, _ = urllib.request.urlretrieve(URL, "tmp/data.xlsx")
             var_df = pd.read_excel("tmp/data.xlsx")[['name', 'label']].rename(columns={'name': 'variable', 'label': 'description'}).set_index('variable')
             var_df = var_df.iloc[8:]
 
