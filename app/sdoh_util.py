@@ -106,7 +106,7 @@ def download_data(name=""):
             URL = "https://www.ahrq.gov/downloads/sdoh/sdoh_2020_tract_1_0.xlsx"
             tmp_dir = "tmp"
             os.makedirs(tmp_dir, exist_ok=True)
-            output_file = os.path.join(tmp_dir, "data.xlsx")
+            ahrq_file = os.path.join(tmp_dir, "data.xlsx")
 
             #Need to create fake header as AHRQ is stopping automated requests
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36' }
@@ -114,19 +114,19 @@ def download_data(name=""):
 
             try:
                 with urllib.request.urlopen(req) as response:
-                    with open(output_file, 'wb') as out_file:
+                    with open(ahrq_file, 'wb') as out_file:
                         out_file.write(response.read())
-                print(f"File successfully downloaded to {output_file}")
+                print(f"File successfully downloaded to {ahrq_file}")
             except urllib.error.HTTPError as e:
                 print(f"HTTP Error: {e.code} - {e.reason}")
             except Exception as e:
                 print(f"An error occured: {e}")
 
             # fn, _ = urllib.request.urlretrieve(URL, "tmp/data.xlsx")
-            var_df = pd.read_excel("tmp/data.xlsx")[['name', 'label']].rename(columns={'name': 'variable', 'label': 'description'}).set_index('variable')
+            var_df = pd.read_excel(ahrq_file)[['name', 'label']].rename(columns={'name': 'variable', 'label': 'description'}).set_index('variable')
             var_df = var_df.iloc[8:]
 
-            data_df = pd.read_excel("tmp/data.xlsx", sheet_name=1).drop(columns=['YEAR', 'COUNTYFIPS', 'STATEFIPS', 'STATE', 'COUNTY', 'REGION', 'TERRITORY']).set_index('TRACTFIPS')
+            data_df = pd.read_excel(ahrq_file, sheet_name=1).drop(columns=['YEAR', 'COUNTYFIPS', 'STATEFIPS', 'STATE', 'COUNTY', 'REGION', 'TERRITORY']).set_index('TRACTFIPS')
 
             var_df.to_csv('data/ahrq_2020_desc.csv')
             data_df.to_csv('data/ahrq_2020.csv')
